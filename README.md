@@ -1,156 +1,34 @@
 # StrongLifts 5×5 Tracker
 
-Self-hosted, single-binary workout tracker cho chương trình StrongLifts 5×5. Multi-user với Google login, leaderboard, PWA. Chạy trên máy tính hoặc VPS, dùng từ trình duyệt điện thoại.
+Self-hosted workout tracker for the StrongLifts 5×5 program. Multi-user with Google login, leaderboard, PWA. Single binary, runs anywhere.
+
+**Status:** Not deployed. Running locally.
 
 ---
+## How to Run
 
-## Mục lục
+### Requirements
 
-- [Chương trình 5×5 là gì](#chương-trình-5×5-là-gì)
-- [Tính năng](#tính-năng)
-- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
-- [Setup Google OAuth](#setup-google-oauth)
-- [Cài đặt và chạy](#cài-đặt-và-chạy)
-- [Hướng dẫn sử dụng](#hướng-dẫn-sử-dụng)
-- [Cài trên điện thoại (PWA)](#cài-trên-điện-thoại-pwa)
-- [Deploy lên server](#deploy-lên-server)
-- [Cấu hình](#cấu-hình)
-- [Thuật toán và công thức](#thuật-toán-và-công-thức)
-- [API Reference](#api-reference)
-- [Cấu trúc database](#cấu-trúc-database)
-- [Tech stack](#tech-stack)
-- [Cấu trúc project](#cấu-trúc-project)
-- [Development](#development)
-
----
-
-## Chương trình 5×5 là gì
-
-StrongLifts 5×5 là chương trình tập sức mạnh dành cho người mới hoặc quay lại tập. Xây trên nguyên tắc **progressive overload** — tăng tạ đều đặn mỗi buổi.
-
-### Cấu trúc
-
-Mỗi tuần 3 buổi, xen kẽ ngày nghỉ. Có 2 workout luân phiên:
-
-| Workout A | Workout B |
-|-----------|-----------|
-| Squat 5×5 | Squat 5×5 |
-| Bench Press 5×5 | Overhead Press 5×5 |
-| Barbell Row 5×5 | Deadlift 1×5 |
-
-Lịch xoay vòng: Tuần 1 (A-B-A), Tuần 2 (B-A-B), ...
-
-Squat mỗi buổi. Deadlift chỉ 1 set vì stress lớn lên hệ thần kinh.
-
-### Quy tắc progression
-
-- Đủ 5 rep × 5 set → buổi sau **+2.5 kg** (Deadlift +5 kg).
-- Không đủ rep ở bất kỳ set nào → giữ nguyên weight. Vẫn làm đủ 5 set.
-- Fail cùng weight **3 buổi liên tiếp** → **deload 10%**.
-
-### Weight khởi đầu mặc định
-
-| Bài tập | Khởi đầu |
-|---------|----------|
-| Squat | 20 kg (bar trống) |
-| Bench Press | 20 kg |
-| Overhead Press | 20 kg |
-| Barbell Row | 30 kg |
-| Deadlift | 40 kg |
-
-Nếu đã từng tập, app tính starting weight từ khả năng hiện tại (xem Setup Wizard).
-
----
-
-## Tính năng
-
-### Google Login & Multi-user
-Đăng nhập bằng Google account. Mỗi user có dữ liệu riêng. Không cần tạo tài khoản thủ công.
-
-### Nickname & Leaderboard
-Sau lần đăng nhập đầu tiên, chọn nickname (1-20 ký tự). Nickname hiển thị trên bảng xếp hạng. Ranking theo tổng Squat + Bench Press + Deadlift (working weight hiện tại).
-
-### Setup Wizard
-Lần đầu: hỏi đã từng tập chưa. Nếu rồi: form pre-fill giá trị mẫu, chỉnh theo khả năng thực → app tính 1RM (Epley) → đặt starting weight ở 50% 1RM. Nếu chưa: dùng weight mặc định.
-
-### Workout Logging
-Tap set → chọn số rep → Log Set. Ô xanh (đủ rep) hoặc vàng (thiếu). Rest timer tự động sau mỗi set.
-
-### Warm-up Sets
-Mỗi bài có warm-up mở sẵn: bar trống × 5, 40% × 5, 60% × 3, 80% × 2. Chỉ hiện set nào có weight > bar. Kèm plate calculator riêng.
-
-### Rest Timer
-Tự động sau mỗi set. 90s (đủ rep), 180s (3-4 rep), 300s (0-2 rep). Âm thanh khi hết giờ. Skip bất kỳ lúc nào.
-
-### Plate Calculator
-Visual đĩa mỗi bên bar, mã màu theo trọng lượng (20kg đỏ, 10kg xanh, 5kg vàng, 2.5kg xanh lá, 1.25kg xám).
-
-### Auto-Progression & Deload
-Finish Workout → tự kiểm tra pass/fail → tăng weight hoặc tăng fail counter → 3 fail liên tiếp → deload 10%.
-
-### Workout Notes
-Ghi chú tự do mỗi buổi, auto-save. Hiển thị trong History.
-
-### Progress Charts
-Đồ thị weight theo thời gian cho từng bài tập (Chart.js).
-
-### Body Weight Tracking
-Log cân nặng hàng ngày + chart.
-
-### Export / Backup
-Settings → Export → JSON chứa toàn bộ exercises, workouts, body weights.
-
-### PWA
-Installable trên Android/iOS. Cache offline cho giao diện.
-
----
-
-## Yêu cầu hệ thống
-
-### Build từ source
 - Go 1.22+
-- Node.js 18+ và npm (chỉ cần nếu sửa frontend)
+- Google OAuth Client ID (free, 5-minute setup)
 
-### Chạy
-- Bất kỳ máy nào chạy Go binary
-- Trình duyệt hiện đại trên thiết bị client
-- Kết nối internet (để load Google Sign-In SDK)
+### Create a Google OAuth Client ID
 
----
-
-## Setup Google OAuth
-
-Cần 1 lần, miễn phí, ~5 phút.
-
-1. Vào [console.cloud.google.com](https://console.cloud.google.com)
-2. Tạo project mới (hoặc dùng cái có sẵn)
-3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Create or select a project
+3. APIs & Services → Credentials → Create Credentials → **OAuth client ID**
 4. Application type: **Web application**
-5. Authorized JavaScript origins, thêm:
-   - `http://localhost:8080` (dev local)
-   - `https://gym.yourdomain.com` (nếu deploy production)
-6. Create → copy **Client ID** (dạng `xxxx.apps.googleusercontent.com`)
+5. Authorized JavaScript origins: add `http://localhost:8080`
+6. Create → copy the Client ID
 
-Nếu OAuth consent screen chưa cấu hình:
-- APIs & Services → OAuth consent screen
-- User Type: **External**
-- Chỉ cần điền App name, User support email, Developer email
-- Scopes: không cần thêm gì (app chỉ dùng basic profile)
-- Publish app (hoặc thêm test users nếu muốn giới hạn)
+If the OAuth consent screen isn't configured yet:
+- APIs & Services → OAuth consent screen → External
+- Fill in App name and email → Save
+- No additional scopes needed
 
----
+### Configuration
 
-## Cài đặt và chạy
-
-### Bước 1: Cấu hình
-
-```bash
-unzip stronglifts.zip
-cd stronglifts
-cp .env.example .env
-```
-
-Mở `.env`, thay `GOOGLE_CLIENT_ID`:
+Edit `.env`:
 
 ```env
 GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
@@ -158,434 +36,615 @@ PORT=8080
 DB_PATH=stronglifts.db
 ```
 
-### Bước 2: Build
+### Build and Run
 
 ```bash
-go mod tidy
-go build -o stronglifts .
+make run
 ```
 
-### Bước 3: Chạy
+Open `http://localhost:8080`. Database is created automatically. Sign in with Google, pick a nickname, set up weights, start training.
 
+### Use on Phone (Same WiFi)
+
+Find your local IP:
 ```bash
-./stronglifts
+ip addr | grep "inet " | grep -v 127.0.0.1
 ```
 
-Mở `http://localhost:8080`. Server tự đọc `.env`.
+Open Chrome on your phone: `http://192.168.x.x:8080`
 
-Nếu không muốn dùng `.env`, truyền trực tiếp:
+Only works when on the same WiFi network and the computer is running the server.
 
-```bash
-GOOGLE_CLIENT_ID="xxxx.apps.googleusercontent.com" ./stronglifts
-```
+## What is StrongLifts 5×5
 
-Environment variables luôn override `.env`.
+A barbell strength training program for beginners or anyone returning after a break. Five compound exercises, three sessions per week. Core principle: **progressive overload** — add weight every session, forcing the body to adapt continuously.
 
-### Build toàn bộ từ source (nếu sửa frontend)
+### The 5 Exercises
 
-```bash
-cd frontend && npm install && npm run build-only && cd ..
-go mod tidy && go build -o stronglifts .
-```
+| Exercise | Primary Muscles |
+|----------|----------------|
+| Squat | Quads, glutes, core |
+| Bench Press | Chest, front delts, triceps |
+| Barbell Row | Back, biceps |
+| Overhead Press | Shoulders, triceps |
+| Deadlift | Lower back, glutes, hamstrings, full body |
+
+### 2 Alternating Workouts
+
+| Workout A | Workout B |
+|-----------|-----------|
+| Squat 5×5 | Squat 5×5 |
+| Bench Press 5×5 | Overhead Press 5×5 |
+| Barbell Row 5×5 | Deadlift 1×5 |
+
+Three sessions per week, rest days in between. Week 1: A-B-A. Week 2: B-A-B. Repeat.
+
+Squat appears every session. Deadlift is only 1 set × 5 reps because it's the heaviest lift and requires more recovery time.
+
+### Progression Rules
+
+- Complete all 5 reps for all sets → next session **+2.5 kg** (Deadlift +5 kg).
+- Fail to hit 5 reps on any set → keep the same weight next session. Still do all 5 sets.
+- Fail at the same weight **3 consecutive sessions** → **deload 10%** (reduce weight, work back up).
+
+### Where to Start
+
+Never lifted before: empty bar (20 kg). Add 2.5 kg every session.
+
+Have lifting experience: enter your current weight × reps → app calculates 1RM → starts you at 50%.
+
+### Warm-up Before Each Exercise
+
+Before working weight, perform 2-4 progressively heavier warm-up sets:
+
+| Set | Weight | Reps |
+|-----|--------|------|
+| 1 | Empty bar (20 kg) | 5 |
+| 2 | 40% of working weight | 5 |
+| 3 | 60% of working weight | 3 |
+| 4 | 80% of working weight | 2 |
+
+Only shows sets where weight > 20 kg and < working weight.
 
 ---
 
-## Hướng dẫn sử dụng
+## What the App Does
 
-### Lần đầu
+Replaces the original StrongLifts app (ads, paid premium). Self-hosted, your data stays with you.
 
-1. Mở app → bấm **Sign in with Google**.
-2. Chọn nickname (hiện trên leaderboard).
-3. Setup Wizard: chọn "Đã tập" → chỉnh weight/reps → app tính starting weight. Hoặc "Chưa" → bar trống.
-4. Về Home, bấm **Start Workout**.
+### Login & Multi-user
 
-### Buổi tập
+Sign in with Google. Each user has their own data. Choose a nickname after first login — displayed on the leaderboard.
 
-1. Mở warm-up, tập warm-up sets theo hướng dẫn.
-2. Tap ô set → chọn rep → **Log Set**.
-3. Rest timer tự chạy. Chờ hoặc Skip.
-4. Lặp lại cho tất cả exercises.
-5. Ghi notes nếu muốn.
-6. **Finish Workout** → weight tự cập nhật.
+### Setup Wizard
 
-### Leaderboard
+First time opening the app: choose "I've lifted before" or "I'm new." If experienced, the form comes pre-filled with sample values — adjust to your actual ability, app calculates starting weights automatically. If new, start from empty bar.
 
-Tab **Rank** → bảng xếp hạng tất cả users. Sorted theo tổng Squat + Bench + Deadlift working weight. Hiển thị avatar, nickname, chi tiết từng bài, số buổi tập.
+### Workout Logging
 
-### Export
-
-Settings → Export → download JSON backup.
-
----
-
-## Cài trên điện thoại (PWA)
-
-### Android (Chrome)
-
-1. Mở `http://<server>:8080` trong Chrome.
-2. Menu (⋮) → **"Add to Home screen"** hoặc **"Install app"**.
-3. Icon xuất hiện trên launcher.
-
-### iOS (Safari)
-
-1. Mở URL trong Safari.
-2. Share (□↑) → **"Add to Home Screen"**.
-
-API calls cần kết nối tới server. Giao diện cache offline.
-
----
-
-## Deploy lên server
-
-### Cùng WiFi (đơn giản)
-
-```bash
-# Tìm IP
-ip addr | grep "inet " | grep -v 127.0.0.1   # Linux/macOS
-ipconfig                                        # Windows
-```
-
-Truy cập: `http://192.168.x.x:8080`
-
-### VPS (24/7)
-
-Upload binary + `.env`:
-
-```bash
-scp stronglifts .env user@server:/opt/stronglifts/
-ssh user@server
-cd /opt/stronglifts && ./stronglifts
-```
-
-### Systemd service
-
-```ini
-# /etc/systemd/system/stronglifts.service
-[Unit]
-Description=StrongLifts 5x5
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/stronglifts
-ExecStart=/opt/stronglifts/stronglifts
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now stronglifts
-```
-
-Server tự đọc `.env` từ `WorkingDirectory`.
-
-### Reverse proxy (Nginx + HTTPS)
-
-```nginx
-server {
-    listen 80;
-    server_name gym.yourdomain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-Thêm HTTPS với Certbot: `sudo certbot --nginx -d gym.yourdomain.com`
-
-**Quan trọng:** thêm domain HTTPS vào Google OAuth "Authorized JavaScript origins".
-
----
-
-## Cấu hình
-
-Qua `.env` file hoặc environment variables. Env vars override `.env`.
-
-| Variable | Mặc định | Bắt buộc | Mô tả |
-|----------|----------|----------|-------|
-| `GOOGLE_CLIENT_ID` | — | Có | Google OAuth Client ID |
-| `PORT` | `8080` | Không | HTTP port |
-| `DB_PATH` | `stronglifts.db` | Không | Đường dẫn SQLite |
-
-File `.env` hỗ trợ:
-- Comments (`# ...`)
-- Quotes (`"value"` hoặc `'value'`)
-- Không override env vars đã set
-
----
-
-## Thuật toán và công thức
-
-### 1RM (Epley Formula)
-
-```
-1RM = Weight × (1 + Reps / 30)
-```
-
-### Starting Weight
-
-```
-Starting Weight = floor(1RM × 0.5 / increment) × increment
-```
-
-Minimum 20 kg. Increment: 2.5 kg (Deadlift 5.0 kg).
-
-### Deload
-
-```
-New Weight = floor(Current Weight × 0.9 / 2.5) × 2.5
-```
-
-Minimum 20 kg. Fail counter reset.
-
-### Warm-up Sets
-
-| Weight | Reps | Điều kiện |
-|--------|------|-----------|
-| 20 kg (bar) | 5 | Luôn có |
-| round(WW × 0.4) | 5 | Nếu > 20 kg và < WW |
-| round(WW × 0.6) | 3 | Nếu > 20 kg và < WW |
-| round(WW × 0.8) | 2 | Nếu > 20 kg và < WW |
-
-### Rest Timer
-
-| Kết quả set | Nghỉ |
-|-------------|------|
-| 5/5 rep | 90s |
-| 3-4 rep | 180s |
-| 0-2 rep | 300s |
+- Home screen shows next workout (A or B), exercise list with weights.
+- Tap Start Workout.
+- Each exercise shows warm-up sets (expanded by default) with plates needed.
+- Tap a set circle → adjust reps → Log Set.
+- Rest timer starts automatically: 90 seconds (all reps completed), 3 minutes (struggled), 5 minutes (heavy fail). Audio alert when done.
+- Add notes if needed (back pain, poor sleep, etc.). Auto-saves.
+- Finish Workout → weights update automatically for next session.
 
 ### Plate Calculator
 
-`Per Side = (Total - 20) / 2`. Greedy: 20, 10, 5, 2.5, 1.25 kg.
+Each exercise shows a visual of plates to load on each side of the bar, color-coded: 20 kg red, 10 kg blue, 5 kg yellow, 2.5 kg green, 1.25 kg gray.
+
+### Progress Charts
+
+Line chart of weight over time for each exercise. Switch between exercises via tabs.
+
+### Body Weight
+
+Log daily body weight, chart over time.
 
 ### Leaderboard
 
+Rank tab — all users ranked by total of Squat + Bench Press + Deadlift working weights. Shows avatar, nickname, per-exercise breakdown, total workout count.
+
+### Export / Backup
+
+Settings → Export → JSON file containing all exercises, workouts, and body weights.
+
+### PWA
+
+On Android: Chrome → "Add to Home screen" → runs like a native app. Static assets cached offline (API calls still need server connectivity).
+
+
+
+# Architecture
+# StrongLifts 5×5 — Technical Documentation
+
+---
+
+## Architecture
+
+Single binary. Go backend embeds the Vue frontend. One process serves both the API and static files. No reverse proxy, no containers, no microservices.
+
 ```
-Total = Squat (current working weight) + Bench Press + Deadlift
+Browser (phone/desktop)
+    │
+    │  HTTP
+    │
+Go server (:8080)
+    ├── /api/*        → REST handlers
+    ├── /             → Vue SPA (embedded)
+    └── SQLite file   → stronglifts.db
 ```
 
-Sorted descending. Chỉ hiện users có nickname.
+---
+
+## Tech Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| Backend | Go 1.22+ | Single binary output, `go:embed` bundles frontend, `net/http` sufficient for REST, no framework needed |
+| Database | SQLite via `modernc.org/sqlite` | Pure Go driver — no CGO required, cross-compiles cleanly, zero config, single file |
+| Auth | Google Identity Services | Server-side ID token verification, no complex OAuth flow, no stored passwords |
+| Session | Random token + cookie | 64-char hex, HttpOnly, SameSite=Lax, 30-day expiry. Server-side session table |
+| Frontend | Vue 3 + TypeScript | Composition API, type-safe, reactive. Pinia for state, Vue Router for SPA |
+| Charts | Chart.js 4 | Lightweight, responsive, sufficient for line charts |
+| Build tool | Vite 5 | Fast builds, good HMR, dev proxy |
+| PWA | Service Worker + Manifest | Static asset caching, installable on Android/iOS |
 
 ---
 
-## API Reference
-
-Base URL: `http://localhost:8080/api`
-
-### Public (no auth)
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/config` | `{"google_client_id": "..."}` |
-| POST | `/auth/google` | Login. Body: `{"credential": "google_id_token"}` |
-| GET | `/warmup/{weight}` | Warm-up sets |
-| GET | `/plates/{weight}` | Plate calculator |
-| GET | `/leaderboard` | Bảng xếp hạng |
-
-### Auth required (session cookie)
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/auth/me` | User hiện tại |
-| POST | `/auth/nickname` | Set nickname. Body: `{"nickname": "xxx"}` |
-| POST | `/auth/logout` | Logout |
-| GET | `/setup/status` | `{"setup_done": true/false}` |
-| POST | `/setup/starting-weights` | Set starting weights |
-| GET | `/exercises` | User's exercises + weights |
-| PUT | `/exercises/{id}/weight` | Chỉnh weight thủ công |
-| GET | `/workout/active` | Workout đang chạy |
-| GET | `/workout/next-type` | "A" hoặc "B" |
-| POST | `/workout/start` | Tạo workout mới |
-| GET | `/workout/{id}` | Chi tiết workout |
-| POST | `/workout/{id}/complete` | Hoàn thành, trigger progression |
-| PUT | `/workout/{id}/notes` | Cập nhật notes |
-| DELETE | `/workout/{id}` | Xoá workout |
-| POST | `/set/{id}/complete` | Log set. Body: `{"reps": 5}` |
-| GET | `/progress/{exerciseId}` | Lịch sử weight |
-| GET | `/history?limit=50` | Danh sách workouts |
-| GET | `/bodyweight?limit=100` | Lịch sử cân nặng |
-| POST | `/bodyweight` | Log cân nặng. Body: `{"weight": 75.5}` |
-| DELETE | `/bodyweight/{id}` | Xoá entry |
-| GET | `/export` | Download JSON backup |
-
-Auth qua cookie `session` (set tự động khi login, 30 ngày).
-
----
-
-## Cấu trúc database
-
-SQLite, single file. 7 tables:
-
-### users
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| id | INTEGER PK | |
-| google_id | TEXT UNIQUE | Google subject ID |
-| email | TEXT | |
-| nickname | TEXT | Hiển thị trên leaderboard |
-| avatar_url | TEXT | Google profile picture |
-| created_at | TEXT | ISO 8601 |
-
-### sessions
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| token | TEXT PK | Random 64-char hex |
-| user_id | INTEGER FK | → users.id |
-| created_at | TEXT | |
-| expires_at | TEXT | +30 ngày |
-
-### exercises (template)
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| id | INTEGER PK | |
-| name | TEXT UNIQUE | Tên bài tập |
-| default_weight | REAL | Weight mặc định cho user mới |
-| increment | REAL | 2.5 hoặc 5.0 |
-
-### user_exercises
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| id | INTEGER PK | |
-| user_id | INTEGER FK | → users.id |
-| exercise_id | INTEGER FK | → exercises.id |
-| current_weight | REAL | Weight hiện tại của user |
-| fail_count | INTEGER | 0-2 |
-| UNIQUE | (user_id, exercise_id) | |
-
-### workouts
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| id | INTEGER PK | |
-| user_id | INTEGER FK | → users.id |
-| type | TEXT | "A" hoặc "B" |
-| date | TEXT | ISO 8601 |
-| completed | INTEGER | 0/1 |
-| notes | TEXT | |
-
-### workout_exercises, workout_sets
-
-Giống trước, linked qua workout_id.
-
-### body_weights
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| id | INTEGER PK | |
-| user_id | INTEGER FK | → users.id |
-| date | TEXT | YYYY-MM-DD |
-| weight | REAL | kg |
-
-### app_settings
-
-Key-value. Keys: `setup_done_{userID}`.
-
----
-
-## Tech stack
-
-| Layer | Công nghệ |
-|-------|-----------|
-| Backend | Go 1.22+, net/http, embed |
-| Auth | Google Identity Services (ID token), server-side session |
-| Database | SQLite (modernc.org/sqlite, pure Go) |
-| Frontend | Vue 3 + TypeScript + Pinia + Vue Router |
-| Charts | Chart.js 4 |
-| Build | Vite 5 |
-| PWA | Service Worker + Web App Manifest |
-
-Single binary ~15MB. Zero runtime dependencies.
-
----
-
-## Cấu trúc project
+## Project Structure
 
 ```
 stronglifts/
-├── main.go                  # Entry point, .env loader, embed frontend
-├── go.mod
-├── .env.example             # Template config
-├── .env                     # Your config (gitignored)
+├── main.go                     # Entry point
+│                                 - .env loader (built-in, no library)
+│                                 - go:embed frontend/dist/*
+│                                 - SPA fallback routing
+│                                 - HTTP server start
+│
+├── go.mod                      # modernc.org/sqlite dependency
+├── .env.example                # Config template
+├── .gitignore
 ├── Makefile
-├── README.md
-├── db/db.go                 # Schema, migrations, all queries
-├── models/models.go         # Shared structs
-├── handlers/handlers.go     # HTTP handlers + auth middleware
+│
+├── models/
+│   └── models.go               # All shared structs
+│                                 - User, Session
+│                                 - Exercise, UserExercise
+│                                 - Workout, WorkoutExercise, WorkoutSet
+│                                 - BodyWeight, ProgressEntry
+│                                 - PlateResult, WarmupSet
+│                                 - LeaderboardEntry
+│                                 - StartingWeightInput/Result
+│                                 - AuthResponse, ExportData
+│
+├── db/
+│   └── db.go                   # Database layer (single file, ~500 lines)
+│                                 - Schema migration (CREATE IF NOT EXISTS)
+│                                 - Seed data (5 exercises)
+│                                 - Auth: FindOrCreateUser, sessions, nickname
+│                                 - User exercises: CRUD, starting weight calc
+│                                 - Workouts: create, complete, progression logic
+│                                 - Warmup: percentage-based calculation
+│                                 - Body weight: CRUD
+│                                 - Leaderboard: aggregate query
+│                                 - Export: full data dump
+│
+├── handlers/
+│   └── handlers.go             # HTTP layer (single file, ~400 lines)
+│                                 - Route registration
+│                                 - Auth middleware (cookie/Bearer token)
+│                                 - 24 endpoints
+│                                 - JSON request/response helpers
+│
 └── frontend/
-    ├── index.html
-    ├── package.json
-    ├── vite.config.ts
-    ├── public/              # PWA assets
-    ├── dist/                # Pre-built (embedded into binary)
+    ├── index.html              # HTML entry, PWA meta tags
+    ├── package.json            # Vue, Pinia, Vue Router, Chart.js
+    ├── vite.config.ts          # Path alias @/, dev proxy /api → :8080
+    ├── tsconfig.json
+    │
+    ├── public/                 # Copied to dist/ as-is
+    │   ├── manifest.json       # PWA manifest
+    │   ├── sw.js               # Service worker (cache-first static, network-first API)
+    │   ├── icon-192.png
+    │   └── icon-512.png
+    │
+    ├── dist/                   # Pre-built, embedded into Go binary
+    │
     └── src/
-        ├── main.ts          # Router, auth guard, PWA
-        ├── App.vue          # Shell, bottom nav
-        ├── api/index.ts     # HTTP client
+        ├── main.ts             # App bootstrap
+        │                         - Router setup (10 routes)
+        │                         - Auth guard (check once, redirect /login)
+        │                         - auth-expired event listener
+        │                         - Service worker registration
+        │
+        ├── App.vue             # Root component
+        │                         - Top bar, bottom nav (5 tabs)
+        │                         - Nav hidden when not logged in
+        │                         - Watch auth → init workout store
+        │
+        ├── env.d.ts            # Vue/Vite type declarations
+        │
+        ├── api/
+        │   └── index.ts        # HTTP client
+        │                         - fetch wrapper with credentials: include
+        │                         - 401 handling (dispatch event, skip for /auth/*)
+        │                         - get/post/put/del helpers
+        │                         - All 24 endpoint functions
+        │
         ├── stores/
-        │   ├── auth.ts      # Login state, Google auth
-        │   └── workout.ts   # Exercises, active workout
-        ├── types/index.ts
+        │   ├── auth.ts         # Auth state
+        │   │                     - user, loggedIn, needNickname
+        │   │                     - checkAuth, loginWithGoogle, setNickname, logout
+        │   │
+        │   └── workout.ts      # Workout state
+        │                         - exercises, activeWorkout, nextType, setupDone
+        │                         - CRUD actions, init()
+        │
+        ├── types/
+        │   └── index.ts        # TypeScript interfaces (mirror Go models)
+        │
         ├── views/
-        │   ├── LoginView.vue
-        │   ├── NicknameView.vue
-        │   ├── HomeView.vue
-        │   ├── SetupView.vue
-        │   ├── WorkoutView.vue
-        │   ├── ProgressView.vue
-        │   ├── BodyWeightView.vue
-        │   ├── HistoryView.vue
-        │   ├── LeaderboardView.vue
-        │   └── SettingsView.vue
+        │   ├── LoginView.vue       # Google Sign-In button
+        │   │                         - Fetch client ID from /api/config
+        │   │                         - Load Google Identity Services SDK
+        │   │                         - Handle credential → loginWithGoogle
+        │   │
+        │   ├── NicknameView.vue    # Post-login nickname entry
+        │   │
+        │   ├── HomeView.vue        # Dashboard
+        │   │                         - Next workout type (A/B)
+        │   │                         - Exercise list with current weights
+        │   │                         - Start/Continue button
+        │   │
+        │   ├── SetupView.vue       # Starting weight wizard
+        │   │                         - Pre-filled form values
+        │   │                         - 1RM calculation results
+        │   │
+        │   ├── WorkoutView.vue     # Active workout
+        │   │                         - Exercise list with SetLogger components
+        │   │                         - Rest timer integration
+        │   │                         - Notes textarea (auto-save)
+        │   │                         - Finish/Cancel with confirmation
+        │   │
+        │   ├── ProgressView.vue    # Charts per exercise
+        │   │                         - Tab selector for exercises
+        │   │                         - Chart.js line chart
+        │   │                         - Current stats (weight, fails, sessions)
+        │   │
+        │   ├── BodyWeightView.vue  # Body weight log
+        │   │
+        │   ├── HistoryView.vue     # Past workouts list
+        │   │
+        │   ├── LeaderboardView.vue # Rankings
+        │   │                         - Medals for top 3
+        │   │                         - S/B/D breakdown
+        │   │                         - Highlight current user
+        │   │
+        │   └── SettingsView.vue    # User info, links, export, logout
+        │
         └── components/
-            ├── SetLogger.vue
-            ├── WarmupDisplay.vue
-            ├── RestTimer.vue
-            └── PlateCalculator.vue
+            ├── SetLogger.vue       # Per-exercise workout UI
+            │                         - Sets grid (tap to log)
+            │                         - Rep editor (+/- buttons)
+            │                         - Success/fail status badge
+            │                         - Integrates WarmupDisplay + PlateCalculator
+            │
+            ├── WarmupDisplay.vue   # Warm-up sets
+            │                         - Expanded by default
+            │                         - Percentage-based calculation
+            │                         - Bar-weight-only message
+            │                         - Plate display per warmup set
+            │
+            ├── RestTimer.vue       # Countdown timer
+            │                         - SVG ring animation
+            │                         - Audio beep on complete
+            │                         - Skip button
+            │
+            └── PlateCalculator.vue # Plate visual
+                                      - Color-coded per weight
+                                      - Height scaled to plate weight
 ```
 
 ---
 
-## Development
+## Database Schema
 
-### Dev mode (2 terminals)
+SQLite, single file, 8 tables. WAL mode enabled.
 
-```bash
-# Terminal 1: Go backend
-go run .
+### Entity Relationship
 
-# Terminal 2: Vue hot reload
-cd frontend && npm run dev
+```
+users ──┬── sessions
+        ├── user_exercises ──── exercises (template)
+        ├── workouts ──── workout_exercises ──── workout_sets
+        │                       └── exercises
+        └── body_weights
+
+app_settings (key-value, standalone)
 ```
 
-Vite proxy `/api/*` → `:8080`. Mở `http://localhost:5173`.
+### Tables
 
-### Cross-compile
+**users** — Google-authenticated accounts.
 
-```bash
-GOOS=linux GOARCH=arm64 go build -o stronglifts-arm .   # ARM VPS
-GOOS=windows GOARCH=amd64 go build -o stronglifts.exe .  # Windows
+| Column | Type | Constraint |
+|--------|------|------------|
+| id | INTEGER | PK, autoincrement |
+| google_id | TEXT | UNIQUE, NOT NULL |
+| email | TEXT | NOT NULL |
+| nickname | TEXT | Default '' |
+| avatar_url | TEXT | Default '' |
+| created_at | TEXT | ISO 8601 |
+
+**sessions** — Server-side session tokens.
+
+| Column | Type | Constraint |
+|--------|------|------------|
+| token | TEXT | PK, 64-char hex |
+| user_id | INTEGER | FK → users.id |
+| created_at | TEXT | |
+| expires_at | TEXT | created_at + 30 days |
+
+**exercises** — Template table. 5 rows, seeded on first run. Never modified per user.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| name | TEXT | UNIQUE (Squat, Bench Press, ...) |
+| default_weight | REAL | Starting weight for new users |
+| increment | REAL | 2.5 or 5.0 |
+
+**user_exercises** — Per-user exercise state. Created when a user first logs in.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| user_id | INTEGER | FK → users.id |
+| exercise_id | INTEGER | FK → exercises.id |
+| current_weight | REAL | Current working weight |
+| fail_count | INTEGER | 0-2, resets on success or deload |
+| | | UNIQUE(user_id, exercise_id) |
+
+**workouts** — One row per training session.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| user_id | INTEGER | FK → users.id |
+| type | TEXT | CHECK('A','B') |
+| date | TEXT | ISO 8601 |
+| completed | INTEGER | 0 or 1 |
+| notes | TEXT | Free-form |
+
+**workout_exercises** — Snapshot of exercises in a workout.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| workout_id | INTEGER | FK → workouts.id |
+| exercise_id | INTEGER | FK → exercises.id |
+| target_sets | INTEGER | 5 (or 1 for Deadlift) |
+| target_reps | INTEGER | 5 |
+| weight | REAL | Frozen at workout creation time |
+
+**workout_sets** — Individual set results.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| workout_exercise_id | INTEGER | FK → workout_exercises.id |
+| set_number | INTEGER | 1-5 |
+| reps | INTEGER | Actual reps performed |
+| completed | INTEGER | 0 or 1 |
+
+**body_weights** — Daily weight log.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER | PK |
+| user_id | INTEGER | FK → users.id |
+| date | TEXT | YYYY-MM-DD |
+| weight | REAL | kg |
+
+**app_settings** — Key-value store. Currently only `setup_done_{userID}`.
+
+---
+
+## Auth Flow
+
+```
+ 1. Browser loads /login
+ 2. Frontend fetches GET /api/config → gets GOOGLE_CLIENT_ID
+ 3. Google Identity Services SDK loads from accounts.google.com
+ 4. User clicks "Sign in with Google" → Google popup
+ 5. Google returns ID token (JWT) to frontend callback
+ 6. Frontend POSTs token to /api/auth/google
+ 7. Backend verifies token via Google tokeninfo endpoint
+ 8. Backend creates or finds user in DB (upsert by google_id)
+ 9. Backend creates session (crypto/rand 32 bytes → 64-char hex, 30-day expiry)
+10. Backend sets HttpOnly cookie "session" (SameSite=Lax, path=/)
+11. Frontend redirects to /nickname (new user) or / (returning user)
+12. All subsequent API calls include cookie automatically
+13. Auth middleware extracts cookie → looks up session → injects userID into context
 ```
 
-### Rebuild frontend
+Session validation: token exists in sessions table + current time < expires_at. Expired sessions are deleted on access.
 
-```bash
-cd frontend && npm install && npm run build-only
-cd .. && go build -o stronglifts .
+---
+
+## Progression Algorithm
+
+Runs when `POST /api/workout/{id}/complete` is called. Executes inside a single SQLite transaction.
+
+```
+for each exercise in the workout:
+    count = sets where (completed = true AND reps >= target_reps)
+
+    if count >= target_sets:
+        # Success
+        current_weight += increment    (2.5 or 5.0)
+        fail_count = 0
+
+    else:
+        # Fail
+        fail_count += 1
+
+        if fail_count >= 3:
+            # Deload
+            current_weight = floor(current_weight × 0.9 / 2.5) × 2.5
+            if current_weight < 20: current_weight = 20
+            fail_count = 0
 ```
 
-### Backup
+---
 
-Copy `stronglifts.db` hoặc GET `/api/export`.
+## Warmup Calculation
+
+```
+Input:  working_weight (float64)
+Output: []WarmupSet
+
+if working_weight <= 20:
+    return empty    # Already at bar weight, nothing lighter to warm up with
+
+sets = [{weight: 20, reps: 5}]    # Always: empty bar
+
+for (pct, reps) in [(0.4, 5), (0.6, 3), (0.8, 2)]:
+    w = round(working_weight × pct / 2.5) × 2.5
+    if w > 20 AND w < working_weight:
+        sets.append({weight: w, reps: reps})
+
+return sets
+```
+
+---
+
+## Starting Weight Calculation
+
+Epley formula:
+
+```
+1RM = weight × (1 + reps / 30)
+starting_weight = floor(1RM × 0.5 / increment) × increment
+minimum = 20 kg
+```
+
+Example: Squat 80 kg × 6 reps → 1RM = 80 × 1.2 = 96 kg → start = floor(48 / 2.5) × 2.5 = 47.5 kg.
+
+---
+
+## Leaderboard Query
+
+```sql
+SELECT
+    u.id, u.nickname, u.avatar_url,
+    squat.current_weight,
+    bench.current_weight,
+    deadlift.current_weight,
+    (SELECT COUNT(*) FROM workouts WHERE user_id = u.id AND completed = 1)
+FROM users u
+WHERE u.nickname != ''
+ORDER BY (squat + bench + deadlift) DESC
+```
+
+Subqueries join `user_exercises` with `exercises` by name. Only users with a nickname appear.
+
+---
+
+## API Endpoints
+
+24 endpoints total. 5 public, 19 require session cookie.
+
+### Public
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | /api/config | Returns google_client_id |
+| POST | /api/auth/google | Exchange Google ID token for session |
+| GET | /api/warmup/{weight} | Calculate warmup sets |
+| GET | /api/plates/{weight} | Calculate plate breakdown |
+| GET | /api/leaderboard | All users ranked by total |
+
+### Authenticated
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | /api/auth/me | Current user info |
+| POST | /api/auth/nickname | Set nickname (1-20 chars) |
+| POST | /api/auth/logout | Clear session |
+| GET | /api/setup/status | Check if setup wizard completed |
+| POST | /api/setup/starting-weights | Calculate and set starting weights |
+| GET | /api/exercises | User's 5 exercises with current weights |
+| PUT | /api/exercises/{id}/weight | Manual weight override |
+| GET | /api/workout/active | Current incomplete workout or null |
+| GET | /api/workout/next-type | "A" or "B" |
+| POST | /api/workout/start | Create new workout with sets |
+| GET | /api/workout/{id} | Full workout detail |
+| POST | /api/workout/{id}/complete | Finish workout, run progression |
+| PUT | /api/workout/{id}/notes | Update notes |
+| DELETE | /api/workout/{id} | Cancel/delete workout |
+| POST | /api/set/{id}/complete | Log a set with reps |
+| GET | /api/progress/{exerciseId} | Weight history for charting |
+| GET | /api/history | Past workouts list |
+| GET | /api/bodyweight | Body weight history |
+| POST | /api/bodyweight | Log today's weight |
+| DELETE | /api/bodyweight/{id} | Delete entry |
+| GET | /api/export | Full JSON data dump |
+
+---
+
+## Frontend Routing
+
+| Path | View | Auth | Purpose |
+|------|------|------|---------|
+| /login | LoginView | Public | Google Sign-In |
+| /nickname | NicknameView | Required | First-time nickname |
+| / | HomeView | Required | Dashboard, start workout |
+| /workout | WorkoutView | Required | Active workout logging |
+| /setup | SetupView | Required | Starting weight wizard |
+| /progress | ProgressView | Required | Charts per exercise |
+| /bodyweight | BodyWeightView | Required | Body weight log |
+| /history | HistoryView | Required | Past workouts |
+| /leaderboard | LeaderboardView | Required | Rankings |
+| /settings | SettingsView | Required | User info, export, logout |
+
+Auth guard runs once on app load (`authChecked` flag prevents repeated API calls). Failed check → redirect to `/login`. Success → initialize workout store.
+
+---
+
+## .env Loader
+
+Built-in, no external library. ~25 lines in `main.go`.
+
+- Reads `.env` from working directory (optional — no error if missing)
+- Parses `KEY=VALUE` lines
+- Supports `#` comments, blank lines, single/double quotes around values
+- Does NOT override existing environment variables
+- Environment variables always take priority over `.env`
+
+---
+
+## Build Pipeline
+
+```
+1. Frontend: npm run build-only
+   → Vite bundles Vue app into frontend/dist/ (HTML + JS + CSS)
+
+2. Backend: go build -o stronglifts .
+   → go:embed packs frontend/dist/* into the binary
+   → modernc.org/sqlite compiled in (pure Go, no CGO)
+
+3. Output: single ~15MB binary
+   → Contains entire app: HTTP server + frontend + SQLite driver
+   → Zero runtime dependencies
+   → Runs on any OS/arch Go supports
+```
+
+Cross-compile:
+```bash
+GOOS=linux GOARCH=arm64 go build -o stronglifts-arm .
+GOOS=windows GOARCH=amd64 go build -o stronglifts.exe .
+GOOS=darwin GOARCH=arm64 go build -o stronglifts-mac .
+```
