@@ -9,8 +9,6 @@ import RestTimer from '../components/RestTimer.vue'
 const store = useWorkoutStore()
 const router = useRouter()
 
-const showTimer = ref(false)
-const timerDuration = ref(90)
 const showConfirmFinish = ref(false)
 const showConfirmCancel = ref(false)
 const notes = ref('')
@@ -18,7 +16,6 @@ const notesSaved = ref(false)
 
 const workout = computed(() => store.activeWorkout)
 
-// Sync notes from workout
 if (workout.value?.notes) {
   notes.value = workout.value.notes
 }
@@ -37,24 +34,25 @@ async function handleCompleteSet(setId: number, reps: number) {
 
   await store.completeSet(setId, reps)
 
+  let duration = 90
   if (reps >= exercise.target_reps) {
-    timerDuration.value = 90
+    duration = 90
   } else if (reps >= 3) {
-    timerDuration.value = 180
+    duration = 180
   } else {
-    timerDuration.value = 300
+    duration = 300
   }
 
   const updatedExercise = store.activeWorkout?.exercises?.find(ex => ex.id === exercise.id)
   const allSetsDone = updatedExercise?.sets?.every(s => s.completed) ?? false
 
   if (!allSetsDone) {
-    showTimer.value = true
+    store.startTimer(duration)
   }
 }
 
 function timerDone() {
-  showTimer.value = false
+  // Timer already cleared itself via store.clearTimer()
 }
 
 let notesTimer: ReturnType<typeof setTimeout> | null = null
@@ -88,13 +86,13 @@ async function cancelWorkout() {
     <div class="workout-header">
       <div class="workout-title">Workout {{ workout.type }}</div>
       <div class="workout-date">
-        {{ new Date(workout.date).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' }) }}
+        {{ new Date(workout.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' }) }}
       </div>
     </div>
 
-    <RestTimer v-if="showTimer" :duration="timerDuration" @done="timerDone" />
+    <RestTimer v-if="store.timerActive" @done="timerDone" />
 
-    <div class="exercises" v-show="!showTimer">
+    <div class="exercises" v-show="!store.timerActive">
       <SetLogger
         v-for="ex in workout.exercises"
         :key="ex.id"
@@ -103,8 +101,7 @@ async function cancelWorkout() {
       />
     </div>
 
-    <!-- Notes -->
-    <div class="card notes-card" v-show="!showTimer">
+    <div class="card notes-card" v-show="!store.timerActive">
       <label class="notes-label">
         Notes
         <span v-if="notesSaved" class="saved-indicator">saved</span>
@@ -112,13 +109,12 @@ async function cancelWorkout() {
       <textarea
         v-model="notes"
         @input="onNotesInput"
-        placeholder="Ghi chú buổi tập (đau lưng, ngủ ít, ...)"
+        placeholder="Session notes (back pain, poor sleep, ...)"
         rows="3"
       ></textarea>
     </div>
 
-    <!-- Actions -->
-    <div class="actions" v-show="!showTimer">
+    <div class="actions" v-show="!store.timerActive">
       <button
         v-if="allExercisesDone && !showConfirmFinish"
         class="btn btn-primary"
@@ -128,10 +124,10 @@ async function cancelWorkout() {
       </button>
 
       <div v-if="showConfirmFinish" class="confirm-box card">
-        <p>Hoàn thành workout? Weights sẽ tự động cập nhật.</p>
+        <p>Complete workout? Weights will update automatically.</p>
         <div class="confirm-actions">
-          <button class="btn btn-primary" @click="finishWorkout">Xác nhận</button>
-          <button class="btn btn-secondary" @click="showConfirmFinish = false">Huỷ</button>
+          <button class="btn btn-primary" @click="finishWorkout">Confirm</button>
+          <button class="btn btn-secondary" @click="showConfirmFinish = false">Cancel</button>
         </div>
       </div>
 
@@ -145,18 +141,18 @@ async function cancelWorkout() {
       </button>
 
       <div v-if="showConfirmCancel" class="confirm-box card">
-        <p>Huỷ workout? Dữ liệu buổi tập này sẽ bị xoá.</p>
+        <p>Cancel workout? All data from this session will be deleted.</p>
         <div class="confirm-actions">
-          <button class="btn btn-danger" @click="cancelWorkout">Xoá</button>
-          <button class="btn btn-secondary" @click="showConfirmCancel = false">Giữ lại</button>
+          <button class="btn btn-danger" @click="cancelWorkout">Delete</button>
+          <button class="btn btn-secondary" @click="showConfirmCancel = false">Keep</button>
         </div>
       </div>
     </div>
   </div>
 
   <div v-else class="no-workout">
-    <p>Không có workout đang chạy.</p>
-    <button class="btn btn-primary" @click="router.push('/')">Về Home</button>
+    <p>No active workout.</p>
+    <button class="btn btn-primary" @click="router.push('/')">Go to Home</button>
   </div>
 </template>
 
@@ -166,7 +162,6 @@ async function cancelWorkout() {
 .workout-title { font-size: 24px; font-weight: 800; }
 .workout-date { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
 .exercises { display: flex; flex-direction: column; gap: 12px; }
-
 .notes-card { margin-bottom: 0; }
 .notes-label {
   display: flex; justify-content: space-between; align-items: center;
@@ -180,7 +175,6 @@ textarea {
   font-size: 14px; font-family: inherit; resize: vertical; outline: none;
 }
 textarea:focus { border-color: var(--primary); }
-
 .actions { margin-top: 8px; }
 .confirm-box { margin-top: 8px; }
 .confirm-box p { font-size: 14px; margin-bottom: 12px; }

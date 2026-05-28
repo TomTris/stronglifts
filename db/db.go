@@ -406,8 +406,9 @@ func (db *Database) CreateWorkout(userID int, wType string) (*models.Workout, er
 			Name: ed.name, TargetSets: ed.sets, TargetReps: ed.reps, Weight: curWeight,
 		}
 		for s := 1; s <= ed.sets; s++ {
-			tx.Exec("INSERT INTO workout_sets (workout_exercise_id, set_number) VALUES (?, ?)", weID, s)
-			we.Sets = append(we.Sets, models.WorkoutSet{WorkoutExerciseID: int(weID), SetNumber: s})
+			setRes, _ := tx.Exec("INSERT INTO workout_sets (workout_exercise_id, set_number) VALUES (?, ?)", weID, s)
+			setID, _ := setRes.LastInsertId()
+			we.Sets = append(we.Sets, models.WorkoutSet{ID: int(setID), WorkoutExerciseID: int(weID), SetNumber: s})
 		}
 		workout.Exercises = append(workout.Exercises, we)
 	}

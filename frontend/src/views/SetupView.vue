@@ -7,7 +7,6 @@ import { api } from '../api'
 
 const store = useWorkoutStore()
 const router = useRouter()
-
 const mode = ref<'choose' | 'input' | 'results'>('choose')
 const results = ref<StartingWeightResult[]>([])
 const submitting = ref(false)
@@ -41,16 +40,12 @@ async function submit() {
     const payload: StartingWeightInput[] = syncedInputs.value
       .filter(i => i.weight > 0 && i.reps > 0)
       .map(i => ({ exercise_id: i.exercise_id, weight: i.weight, reps: i.reps }))
-
     if (payload.length === 0) { await useDefaults(); return }
-
     results.value = await api.setStartingWeights(payload)
     mode.value = 'results'
     store.setupDone = true
     await store.fetchExercises()
-  } finally {
-    submitting.value = false
-  }
+  } finally { submitting.value = false }
 }
 </script>
 
@@ -59,20 +54,19 @@ async function submit() {
     <h1 class="title">Setup</h1>
 
     <div v-if="mode === 'choose'" class="choose">
-      <p class="desc">Bạn đã từng tập barbell chưa?</p>
+      <p class="desc">Have you trained with a barbell before?</p>
       <button class="btn btn-primary" @click="mode = 'input'">
-        Đã tập — nhập số liệu hiện tại
+        Yes — enter my current numbers
       </button>
       <button class="btn btn-secondary" style="margin-top:12px" @click="useDefaults">
-        Chưa — bắt đầu từ bar trống
+        No — start with an empty bar
       </button>
     </div>
 
     <div v-if="mode === 'input'" class="input-form">
       <p class="desc">
-        Nhập weight và số rep bạn làm được gần nhất. Chỉnh số nếu khác. Bỏ trống = mặc định.
+        Enter the weight and reps you can do for each exercise. Adjust the pre-filled values to match your ability. Leave blank to use defaults.
       </p>
-
       <div v-for="inp in inputs" :key="inp.name" class="card exercise-input">
         <div class="exercise-label">{{ inp.name }}</div>
         <div class="input-row">
@@ -86,12 +80,11 @@ async function submit() {
           </div>
         </div>
       </div>
-
-      <button class="btn btn-primary" @click="submit" :disabled="submitting">Tính Starting Weight</button>
+      <button class="btn btn-primary" @click="submit" :disabled="submitting">Calculate Starting Weight</button>
     </div>
 
     <div v-if="mode === 'results'" class="results">
-      <p class="desc">Starting weights đã được tính:</p>
+      <p class="desc">Starting weights have been calculated:</p>
       <div v-for="r in results" :key="r.exercise_id" class="card result-card">
         <div class="result-name">{{ r.name }}</div>
         <div class="result-detail">
@@ -100,7 +93,7 @@ async function submit() {
           <span class="result-start">Start: {{ r.starting_weight }} kg</span>
         </div>
       </div>
-      <button class="btn btn-primary" @click="router.push('/')">Bắt đầu tập</button>
+      <button class="btn btn-primary" @click="router.push('/')">Start Training</button>
     </div>
   </div>
 </template>

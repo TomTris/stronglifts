@@ -9,18 +9,12 @@ const auth = useAuthStore()
 const router = useRouter()
 
 function exportData() { window.open(api.getExportUrl(), '_blank') }
-
-async function handleLogout() {
-  await auth.logout()
-  router.push('/login')
-}
+async function handleLogout() { await auth.logout(); router.push('/login') }
 </script>
 
 <template>
   <div class="settings-view">
     <h2 class="section-title">Settings</h2>
-
-    <!-- User info -->
     <div class="card user-card" v-if="auth.user">
       <div class="user-row">
         <img v-if="auth.user.avatar_url" :src="auth.user.avatar_url" class="user-avatar" referrerpolicy="no-referrer">
@@ -30,27 +24,22 @@ async function handleLogout() {
         </div>
       </div>
     </div>
-
     <div class="card setting-item" @click="router.push('/setup')">
-      <div class="setting-label">Chỉnh Starting Weight</div>
-      <div class="setting-desc">Nhập lại số liệu hiện tại</div>
+      <div class="setting-label">Adjust Starting Weights</div>
+      <div class="setting-desc">Re-enter your current numbers to recalculate</div>
     </div>
-
     <div class="card setting-item" @click="router.push('/history')">
       <div class="setting-label">Workout History</div>
-      <div class="setting-desc">Xem tất cả buổi tập trước</div>
+      <div class="setting-desc">View all past sessions</div>
     </div>
-
     <div class="card setting-item" @click="router.push('/bodyweight')">
       <div class="setting-label">Body Weight</div>
-      <div class="setting-desc">Theo dõi cân nặng</div>
+      <div class="setting-desc">Track your body weight</div>
     </div>
-
     <div class="card setting-item" @click="exportData">
       <div class="setting-label">Export / Backup</div>
-      <div class="setting-desc">Tải dữ liệu dạng JSON</div>
+      <div class="setting-desc">Download all data as JSON</div>
     </div>
-
     <h3 class="sub-title">Current Weights</h3>
     <div v-for="ex in store.exercises" :key="ex.id" class="card exercise-card">
       <div class="ex-row">
@@ -62,7 +51,6 @@ async function handleLogout() {
         <span v-if="ex.fail_count > 0" class="fail-text">{{ ex.fail_count }}/3 fails</span>
       </div>
     </div>
-
     <button class="btn btn-danger" style="margin-top: 16px;" @click="handleLogout">Logout</button>
   </div>
 </template>
@@ -71,14 +59,12 @@ async function handleLogout() {
 .settings-view { display: flex; flex-direction: column; gap: 12px; }
 .section-title { font-size: 20px; font-weight: 700; }
 .sub-title { font-size: 16px; font-weight: 600; margin-top: 8px; }
-
 .user-card { margin-bottom: 0; }
 .user-row { display: flex; align-items: center; gap: 12px; }
 .user-avatar { width: 44px; height: 44px; border-radius: 50%; }
 .user-info { flex: 1; }
 .user-name { font-weight: 600; font-size: 16px; }
 .user-email { font-size: 12px; color: var(--text-dim); }
-
 .setting-item { cursor: pointer; margin-bottom: 0; transition: background 0.2s; }
 .setting-item:active { background: var(--surface-2); }
 .setting-label { font-weight: 600; font-size: 15px; }

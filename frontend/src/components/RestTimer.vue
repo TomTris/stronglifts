@@ -1,41 +1,43 @@
 <script setup lang="ts">
-import { ref, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useWorkoutStore } from '../stores/workout'
 
-const props = defineProps<{
-  duration: number // seconds
-}>()
+const store = useWorkoutStore()
+const emit = defineEmits<{ done: [] }>()
 
-const emit = defineEmits<{
-  done: []
-}>()
-
-const remaining = ref(props.duration)
-const running = ref(true)
+const remaining = ref(0)
 let interval: ReturnType<typeof setInterval> | null = null
+
+function updateRemaining() {
+  if (!store.timerEndTime) {
+    remaining.value = 0
+    return
+  }
+  const left = Math.ceil((store.timerEndTime - Date.now()) / 1000)
+  if (left <= 0) {
+    remaining.value = 0
+    stop()
+    beep()
+    store.clearTimer()
+    emit('done')
+  } else {
+    remaining.value = left
+  }
+}
 
 function start() {
   if (interval) clearInterval(interval)
-  running.value = true
-  interval = setInterval(() => {
-    remaining.value--
-    if (remaining.value <= 0) {
-      stop()
-      beep()
-      emit('done')
-    }
-  }, 1000)
+  updateRemaining()
+  interval = setInterval(updateRemaining, 250)
 }
 
 function stop() {
-  running.value = false
-  if (interval) {
-    clearInterval(interval)
-    interval = null
-  }
+  if (interval) { clearInterval(interval); interval = null }
 }
 
 function skip() {
   stop()
+  store.clearTimer()
   emit('done')
 }
 
@@ -50,9 +52,7 @@ function beep() {
     gain.gain.value = 0.3
     osc.start()
     osc.stop(ctx.currentTime + 0.3)
-  } catch {
-    // Audio not available
-  }
+  } catch {}
 }
 
 const display = computed(() => {
@@ -62,14 +62,12 @@ const display = computed(() => {
 })
 
 const progress = computed(() => {
-  return ((props.duration - remaining.value) / props.duration) * 100
+  if (!store.timerDuration) return 0
+  return ((store.timerDuration - remaining.value) / store.timerDuration) * 100
 })
 
-start()
-
-onUnmounted(() => {
-  if (interval) clearInterval(interval)
-})
+onMounted(start)
+onUnmounted(stop)
 </script>
 
 <template>
@@ -94,59 +92,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.timer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 0;
-}
-
-.timer-ring {
-  position: relative;
-  width: 120px;
-  height: 120px;
-}
-
-.timer-svg {
-  transform: rotate(-90deg);
-}
-
-.ring-bg {
-  fill: none;
-  stroke: var(--surface-2);
-  stroke-width: 6;
-}
-
-.ring-progress {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 6;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear;
-}
-
-.timer-display {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.timer-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--text-dim);
-}
-
-.timer-skip {
-  width: auto;
-  padding: 8px 32px;
-  font-size: 14px;
-}
+.timer { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 0; }
+.timer-ring { position: relative; width: 120px; height: 120px; }
+.timer-svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 6; }
+.ring-progress { fill: none; stroke: var(--primary); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
+.timer-display { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer-label { font-size: 12px; font-weight: 600; letter-spacing: 2px; color: var(--text-dim); }
+.timer-skip { width: auto; padding: 8px 32px; font-size: 14px; }
 </style>

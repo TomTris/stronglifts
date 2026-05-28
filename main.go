@@ -17,6 +17,7 @@ import (
 var frontendFS embed.FS
 
 func main() {
+	// Load .env if present (does not override existing env vars)
 	loadEnv(".env")
 
 	port := getEnv("PORT", "8080")
@@ -35,11 +36,8 @@ func main() {
 
 	h := handlers.New(database)
 	mux := http.NewServeMux()
-
-	// API routes
 	h.RegisterRoutes(mux)
 
-	// Static files from embedded frontend
 	distFS, err := fs.Sub(frontendFS, "frontend/dist")
 	if err != nil {
 		log.Fatalf("Failed to load frontend: %v", err)
@@ -47,16 +45,13 @@ func main() {
 	fileServer := http.FileServer(http.FS(distFS))
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// For SPA: serve index.html for non-file routes
 		path := r.URL.Path
 		if path != "/" {
-			// Try to serve the file
 			if _, err := fs.Stat(distFS, path[1:]); err == nil {
 				fileServer.ServeHTTP(w, r)
 				return
 			}
 		}
-		// Serve index.html for SPA routing
 		r.URL.Path = "/"
 		fileServer.ServeHTTP(w, r)
 	})
